@@ -3,6 +3,7 @@ package com.zhonghezhihui.iorg.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.zhonghezhihui.iorg.config.GlobalConstant;
 import com.zhonghezhihui.iorg.service.DeviceService;
+import com.zhonghezhihui.iorg.service.WhiteListService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +16,9 @@ public class DeviceController {
 
     @Autowired
     DeviceService deviceService;
+
+    @Autowired
+    WhiteListService whiteListService;
 
     /**
      *
@@ -30,16 +34,20 @@ public class DeviceController {
         return data;
     }
 
-    /**
-     *
-     * @param model  1 表示移除
-     * @return
-     */
+
     @GetMapping("/whitelist/remove")
-    public JSONObject whitelistRemove(@RequestParam Integer model) {
-        GlobalConstant.WHITELIST_REMOVE = model;
+    public JSONObject whitelistRemove() {
+        GlobalConstant.WHITELIST_REMOVE = 1;
         JSONObject data = new JSONObject();
         data.put("msg", "whitelistRemove");
+        return data;
+    }
+
+    @GetMapping("/whitelist/add")
+    public JSONObject whitelistAdd() {
+        whiteListService.addSendPerson();
+        JSONObject data = new JSONObject();
+        data.put("msg", "whitelistAdd");
         return data;
     }
 }

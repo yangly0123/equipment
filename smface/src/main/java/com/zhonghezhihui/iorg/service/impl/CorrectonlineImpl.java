@@ -76,7 +76,7 @@ public class CorrectonlineImpl implements CorrectonlineService {
             // 退款到个人账户
             userService.updateById(userEntity.getId(), userEntity.getBalance(), userEntity.getAllowance(), userEntity.getPoints());
             Integer total = userEntity.getBalance() + userEntity.getAllowance();
-            Integer consumeMoney =  userEntity.getAllowance() + userEntity.getBalance();
+            Integer consumeMoney =  paymentEntity.getUseAllowance() + paymentEntity.getUseBalance();
             String dataBaseStr = accountId.toString() + accountId.toString() + accountId.toString() + consumeMoney.toString() + time + noncestr + GlobalConstant.CARD_PWD;
             String dataSign = ServerUtils.computeMd5Sign(dataBaseStr);
             ArrayList<JSONObject> result = new ArrayList<>();

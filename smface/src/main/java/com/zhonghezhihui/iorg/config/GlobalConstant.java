@@ -13,12 +13,15 @@ public class GlobalConstant {
 
     public static final Long TOLERANCE_TIME = 1000 * 60 * 3L;
     public static final String IMAGE_PROFILE = "D:\\wenjian\\";
-    public static final String API_HOST = "http://localhost:5002";
+
 
     public static final AtomicInteger DEVICE_SETTINGS_RELOAD = new AtomicInteger(0); // 0表示不需要同步， 1表示需要同步
     public static Integer WHITELIST_REMOVE = 0;
 
-    public static Integer CORRECTIONS = 100;
+    public static Integer CORRECTIONS = 1000;
+
+    public static final String API_HOST = "http://192.168.110.246:5002/image?name=";
+    public static final String USER_USRL = "http://192.168.110.246:5002/image?name=aba5578fef8844e6ab3a75f4d6dc580d.jpeg";
 
     // MODEL 0
     public static final String DEVICE_SETTINGS_MODEL_0 = "{\n" +
@@ -74,7 +77,7 @@ public class GlobalConstant {
             "\t\t\"param_id\": \"000000\"\n" +
             "\t}, {\n" +
             "\t\t\"key\": \"fix_money\",\n" +
-            "\t\t\"value\": 1200,\n" +
+            "\t\t\"value\": 1000,\n" +
             "\t\t\"param_id\": \"000000\"\n" +
             "\t}]\n" +
             "}";
@@ -103,7 +106,7 @@ public class GlobalConstant {
             "\t\t\"param_id\": \"000000\"\n" +
             "\t}, {\n" +
             "\t\t\"key\": \"fix_money\",\n" +
-            "\t\t\"value\": 1200,\n" +
+            "\t\t\"value\": 1000,\n" +
             "\t\t\"param_id\": \"000000\"\n" +
             "\t}],\n" +
             "\t\"time_period\": [{\n" +

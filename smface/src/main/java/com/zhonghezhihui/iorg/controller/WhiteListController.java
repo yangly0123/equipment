@@ -2,6 +2,7 @@ package com.zhonghezhihui.iorg.controller;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.zhonghezhihui.iorg.config.GlobalConstant;
 import com.zhonghezhihui.iorg.entity.WhitelistEntity;
 import com.zhonghezhihui.iorg.service.WhiteListService;
 import org.slf4j.Logger;
@@ -80,8 +81,7 @@ public class WhiteListController {
                 whiteListService.updateRemoveWhiteById(whitelist);
             }
             JSONObject result = whiteListService.removeWhiteList(devId, transactionId);
-            // add person
-            whiteListService.addSendPerson();
+            GlobalConstant.WHITELIST_REMOVE = 0;
             return result;
         } catch (Exception e) {
             logger.error("delperson: " + e.getMessage());

@@ -91,7 +91,7 @@ public class InitData {
         originWhitelistEntity.setLevelId(0);
         originWhitelistEntity.setCardSn("");
         originWhitelistEntity.setDoorRight("");
-        originWhitelistEntity.setUrl("http://127.0.0.1:5002/image?name=/4c287d75d2874060be012e22d56f6c49.jpeg");
+        originWhitelistEntity.setUrl(GlobalConstant.USER_USRL);
         originWhitelistEntity.setGroups(4L);
         originWhitelistEntity.setAccessPwd("");
         originWhitelistEntity.setState(0);
@@ -109,7 +109,7 @@ public class InitData {
         userEntity.setId(511);
         userEntity.setName("Tom");
         userEntity.setBalance(0);
-        userEntity.setAllowance(2000);
+        userEntity.setAllowance(20000);
         userEntity.setPoints(0);
         return userEntity;
     }
@@ -118,10 +118,12 @@ public class InitData {
         PaymentEntity paymentEntity = new PaymentEntity();
         paymentEntity.setId(1);
         paymentEntity.setOrderId(1);
-        paymentEntity.setAllowance(100);
+        paymentEntity.setAllowance(1000);
         paymentEntity.setBalance(0);
         paymentEntity.setPoint(10);
-        paymentEntity.setAmount(0);
+        paymentEntity.setAmount(1000);
+        paymentEntity.setUseAllowance(1000);
+        paymentEntity.setUseBalance(0);
         return paymentEntity;
     }
 

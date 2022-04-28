@@ -30,7 +30,7 @@ public class RecordsServiceImpl implements RecordsService {
                 String devRecordId = jsonObject.getString("id");
                 ids.add(devRecordId);
             }
-            logger.warn("hearbeat return records ids ==========================: " + JSON.toJSONString(list));
+            logger.warn("hearbeat return records ids ==========================: " + JSON.toJSONString(ids));
             String time = ServerUtils.getTimestampSeconds().toString();
             String noncestr = ServerUtils.getRandomString(32).toLowerCase();
             String transactionId = data.getString("transaction_id");

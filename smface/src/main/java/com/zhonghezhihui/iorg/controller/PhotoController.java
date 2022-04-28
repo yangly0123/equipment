@@ -39,7 +39,7 @@ public class PhotoController {
             logger.warn("松美消费机 iorg-smface receive equipment upload  person face image, imgFilePath ============================ :" + imgFilePath);
             boolean b = ServerUtils.GenerateImage(base64Str, imgFilePath);
             if (!b) throw new Exception("保存图片失败！");
-            String url = "/" + imgName;
+            String url = imgName;
             JSONObject result = new JSONObject();
             Long time = ServerUtils.getTimestampSeconds();
             String noncestr = ServerUtils.getRandomString(32);

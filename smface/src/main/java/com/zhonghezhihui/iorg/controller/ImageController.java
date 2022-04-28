@@ -23,7 +23,7 @@ public class ImageController {
             @RequestParam(value="name", defaultValue = "") String name
     ) {
         try {
-            String url= GlobalConstant.API_HOST + name;
+            String url= GlobalConstant.IMAGE_PROFILE + name;
             File file = new File(url);
             String l=request.getRealPath("/")+"/"+url;
             String filename = file.getName();

@@ -79,8 +79,8 @@ public class PosonlineServiceImpl implements PosonlineService {
             Integer empId = accountId;
             int point = consumeMoney / 100;
             logger.warn("iorg-smface update user point ================================ add point: " + point);
-            logger.warn("iorg-smface update user allowance ================================ add allowance: " );
-            logger.warn("iorg-smface update user balance ================================ add balance: " );
+            logger.warn("iorg-smface update user allowance =================================");
+            logger.warn("iorg-smface update user balance ================================= ");
             UserEntity userEntity = initData.userEntity;
             userEntity.setAllowance(userEntity.getAllowance() - consumeMoney);
             userEntity.setBalance(userEntity.getBalance() - 0);
