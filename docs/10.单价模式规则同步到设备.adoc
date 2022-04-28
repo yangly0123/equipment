@@ -1,0 +1,118 @@
+= 单价模式规则同步至设备设计文档
+v1.0, 2022-04-14
+:doctype: article
+:encoding: utf-8
+:lang: zh
+:toc:
+:numbered:
+:AUTHOR: wangmaojun
+
+
+## 单价模式规则同步至设备设计
+
+### 数据库表
+
+----
+CREATE TABLE `smf_device` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `dev_id` varchar(6) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `organization_id` int(11) DEFAULT NULL COMMENT ' 组织ID',
+  `mac` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '设备的MAC地址',
+  `ip` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `fireware` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '固件版本号',
+  `version` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '软件版本号',
+  `model` varchar(2) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '机型，1考勤机，2门禁机，5消费机，6充值',
+  `sub_model` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '子功能，1去向牌门禁机，2会议人脸门禁，3会议看板',
+  `serialno` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '设备序列号，有的机型传出此值',
+  `time` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '设备时间，unix时间毫秒',
+  `customer` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '客户标识，默认为空',
+  `door_state` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '门状态，0开  1关，以下同',
+  `person_count` int(11) DEFAULT NULL COMMENT '当前名单数量',
+  `face_count` int(11) DEFAULT NULL COMMENT '当前人脸数量',
+  `total` int(11) DEFAULT NULL COMMENT '未上传的记录数量',
+  `build_time` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT 'APP编译时间',
+  `wallet_consume_mode` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '钱包扣款模式：0先消费补贴再个人，1仅现金，2仅补贴',
+  `consume_finish_voice_type` int(11) DEFAULT NULL COMMENT '//0="谢谢", 1="播报消费金额", 2="姓名+谢谢",3= "姓名+金额"',
+  `settings` text COLLATE utf8mb4_unicode_ci COMMENT '  消费机设置，json',
+  `reload` int(1) DEFAULT NULL COMMENT '1: 需要重载配置，0: 不需要重载配置',
+  `last_heartbeat_time` datetime DEFAULT NULL COMMENT '最近一次收到设备心跳时间',
+  `create_time` datetime DEFAULT NULL,
+  `update_time` datetime DEFAULT NULL,
+  `deleted` tinyint(4) DEFAULT '0',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC COMMENT='消费设备（松美人脸机）';
+
+----
+
+### 单价模式规则同步至设备设计思路
+
+1. 在组织管理端设置消费模式-单价
+
+2. 消费机运行期间，如果组织管理端设置或修改消费机模式，通过 设备调取 smface-server /request/heartbeat 回传设备设置信息
+
+
+
+## 程序实现流程
+
+### /request/heartbeat
+
+----
+ /**
+     * @param data
+     * @return
+     */
+    @RequestMapping("heartbeat")
+    public JSONObject heartbeat(@RequestBody JSONObject data) {
+        logger.warn("松美消费机 start heartbeat ======================================");
+        try {
+            logger.warn("heartbeat received request data ===========================：" + JSON.toJSONString(data));
+            String devId = data.getString("dev_id");
+            logger.warn("heartbeat dev_id ===========================: " + devId);
+            String serialno = data.getString("serialno");
+            logger.warn(" heartbeat serialno ===========================: " + serialno);
+            String transactionId = data.getString("transaction_id");
+            logger.info("query device, the device id : ===============================" + devId);
+            DeviceEntity deviceEntity = deviceService.queryByDeviceId(devId, serialno);
+            if (deviceEntity != null) {
+                deviceEntity.setLastHeartbeatTime(LocalDateTime.now());
+                //1. update heart time
+                logger.warn("heartbeat update heart time, the time: ====================================" + new Date());
+                deviceService.update(deviceEntity);
+            }
+            //4. send device settings
+            if (GlobalConstant.DEVICE_SETTINGS_RELOAD.intValue() == 0) {
+                JSONObject settings = deviceSettingService.reloadSettings(deviceEntity, transactionId);
+                return settings;
+            }
+            // 5. return heartbeat data
+            JSONObject back = heartBeatService.handleHeartbeat(data);
+            back.put("interval", GlobalConstant.interval);
+            logger.warn("松美消费机 heartbeat return result ================================== :" + JSON.toJSONString(back));
+            return back;
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("松美消费机 heartbeat  failed, cause ==================================:  " + e.getMessage());
+            return null;
+        }
+    }
+----
+
+### api value
+
+api = "parameters"
+
+## 修改心跳间隔时间
+
+在服务端应答设备回传的参数可以修改心跳时间间隔，字段 interval
+
+----
+jsonObject.put("interval", 60000);
+----
+
+
+## 权限认证
+
+注意：如果采用spring security 或者 Oauth2, 一定要将 /request/heartbeat 进行权限放行，不然设备无法调取接口
+
+
+

@@ -1,0 +1,96 @@
+= 人脸消费-定额设计文档
+v1.0, 2022-04-14
+:doctype: article
+:encoding: utf-8
+:lang: zh
+:toc:
+:numbered:
+:AUTHOR: wangmaojun
+
+
+## 人脸消费-定额设计
+
+### 人脸消费-定额设计思路
+
+* 在消费机上刷人脸
+
+[TIP]
+====
+消费机需要调成消费机模式
+====
+
+* 消费机设备调取 smface-server 服务接口/ request/real, 走 case "infoquery"
+
+* case "infoquery" 流程内部代码查询当前消费者的balance(账户余额)，allowance(补助余额)，返回给设备
+
+* 用户点击确认，消费机设备调取 smface-server 服务接口 /request/real, 走 case "posonline"
+
+[TIP]
+====
+a. 需要区分是扫银行app二维码消费还是 人脸识别消费
+b. 需要计算balance 花了多少， allowance花了多少， point增加了多少
+c. 存储本次消费的记录明细， 存储本次的消费详情
+d. 更新当前用户的balance、allowance、point
+====
+
+## 程序实现流程
+
+
+### request/real
+
+----
+ @PostMapping("real")
+    public JSONObject real(@RequestBody JSONObject data) {
+        String api = data.getString("api");
+        String time = data.getString("time");
+        String noncestr = data.getString("noncestr");
+        String sign = data.getString("sign");
+        try {
+            switch (api) {
+                // include balance、allowance money
+                case "infoquery":
+                    logger.warn("松美消费机 iorg-smface real infoquery start =================================");
+                    return infoQueryService.infoQuery(data);
+                //Face consumption Click to confirm
+                case "posonline":
+                    logger.warn("松美消费机 iorg-smface real posonline start =================================");
+                    return posonlineService.posonline(data);
+                default:
+                logger.error("松美消费机 iorg-smface real failed =================================");
+                throw new IllegalStateException("松美消费机 iorg-smface real failed, api ======================================: " + api);
+            }
+        } catch (Exception e) {
+            logger.error("real: " + e.getMessage());
+            JSONObject res = new JSONObject();
+            res.put("api", api);
+            res.put("result_code", "1");
+            res.put("result_msg", "支付失败");
+            return res;
+        }
+    }
+----
+
+
+### api value
+
+* case "infoquery"
+
+api = "infoquery"
+
+* case "posonline"
+
+api = "posonline"
+
+
+## 修改心跳间隔时间
+
+在服务端应答设备回传的参数可以修改心跳时间间隔，字段 interval
+
+----
+jsonObject.put("interval", 60000);
+----
+
+
+## 权限认证
+
+注意：如果采用spring security 或者 Oauth2, 一定要将 /request/real 进行权限放行，不然设备无法调取接口

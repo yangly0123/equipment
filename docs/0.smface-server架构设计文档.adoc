@@ -1,0 +1,13 @@
+= smface-server架构设计文档
+v1.0, 2022-04-18
+:doctype: article
+:encoding: utf-8
+:lang: zh
+:toc:
+:numbered:
+:AUTHOR: wangmaojun
+
+
+## smface-server架构设计文档
+
+详见smface-server架构设计文档.pdf

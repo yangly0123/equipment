@@ -1,0 +1,16 @@
+server:
+  compression:
+    enabled: true
+    mime-types: '*/*'
+    min-response-size: 2048
+
+spring:
+  aop:
+    auto: true
+    proxy-target-class: true
+    main:
+      banner-mode: 'off'
+      allow-bean-definition-overriding: true
+
+swagger:
+  enable: true

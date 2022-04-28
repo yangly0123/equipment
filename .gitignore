@@ -1,0 +1,101 @@
+/bin/
+target
+.svn
+*.log
+.settings
+.classpath
+.project
+.cache
+.cache-main
+.cache-tests
+datanucleus.log
+.README.md.html
+/.idea/
+*.iml
+*.DS_Store
+.idea
+/.project
+*.class
+analytics-portal
+######################
+# Node
+######################
+/node/**
+**/node_modules/**
+
+
+######################
+# Intellij
+######################
+.idea/**
+
+
+######################
+# Maven
+######################
+/log/**
+/target/**
+
+######################
+# Gradle
+######################
+.gradle/**
+
+######################
+# Package Files
+######################
+*.jar
+*.war
+*.ear
+*.db
+
+######################
+# Windows
+######################
+# Windows image file caches
+Thumbs.db
+
+# Folder com.datapps.analytics.security.core.config file
+Desktop.ini
+
+
+######################
+# Directories
+######################
+/build/**
+/bin/**
+/spring_loaded/**
+/deploy/**
+
+######################
+# Logs
+######################
+*.log
+
+######################
+# Others
+######################
+*.class
+*.*~
+*~
+.merge_file*
+
+
+######################
+# Maven Wrapper
+######################
+!.mvn/wrapper/maven-wrapper.jar
+
+######################
+
+
+logs
+**/*.iml
+
+studio-work-dir
+
+**/*.epoch
+
+**/*.pid
+
+**/*.log

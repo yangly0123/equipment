@@ -1,0 +1,22 @@
+= 消息通知到打印机设计文档
+v1.0, 2022-04-18
+:doctype: article
+:encoding: utf-8
+:lang: zh
+:toc:
+:numbered:
+:AUTHOR: wangmaojun
+
+
+## 消息通知到打印机设计
+
+### 消息通知到打印机设计思路
+
+1. 当二维码取餐或人脸取餐后点击确认，消费机会发送消息通知打印机打印小票，smface-server 不会介入
+
+2. 小票打印的菜品详情这些， 是在二维码取餐或人脸取餐的第一步已经查询得到
+
+3. 设备调取smface-server 接口 request/real，走 case "takemeal" 逻辑, 接口应答信息包含
+订单中菜品的信息、数量的信息
+
+

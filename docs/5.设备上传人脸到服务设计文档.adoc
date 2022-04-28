@@ -1,0 +1,107 @@
+= 设备上传人脸图片到服务设计文档
+v1.0, 2022-04-14
+:doctype: article
+:encoding: utf-8
+:lang: zh
+:toc:
+:numbered:
+:AUTHOR: wangmaojun
+
+
+## 设备上传人脸图片到服务设计
+
+### 数据库表
+
+----
+CREATE TABLE `iorg_user` (
+  `id` int(10) NOT NULL AUTO_INCREMENT,
+  `organization_id` int(10) NOT NULL COMMENT '组织ID',
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '姓名',
+  `role` int(1) DEFAULT '0' COMMENT '0:员工  1:学生',
+  `employee_no` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '工号/学号',
+  `email` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '邮箱',
+  `gender` int(2) DEFAULT '0' COMMENT '1 男， 2女, 0 未知',
+  `photo` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT ' 人脸照片',
+  `phone` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `balance` int(10) NOT NULL DEFAULT '0' COMMENT '余额 单位分',
+  `allowance` int(10) NOT NULL DEFAULT '0' COMMENT '补助 单位分',
+  `points` int(10) NOT NULL DEFAULT '0' COMMENT '积分',
+  `latest_login_time` datetime DEFAULT NULL COMMENT '最近登录时间',
+  `expire_time` datetime DEFAULT NULL COMMENT '过期时间',
+  `create_time` datetime NOT NULL,
+  `update_time` datetime DEFAULT NULL,
+  `deleted` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=519 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+----
+
+### 设备上传人脸图片到服务设计思路
+
+1. 设备主动调取 smface server 服务接口，接口地址 /request/takephoto
+
+2. smface server 请求中拿到人脸照片base64 字符串，存储在磁盘，将此地址更新到 iorg_user 表中的photo字段
+
+
+## 程序实现流程
+
+
+### /request/takephoto
+
+----
+ @PostMapping("takephoto")
+    public JSONObject takephoto(@RequestBody JSONObject data) {
+        try {
+            logger.warn("松美消费机 iorg-smface receive equipment upload  person face image, start ============================");
+            String account_id = data.getString("account_id");
+            Integer accountId = Integer.parseInt(account_id, 10);
+            logger.warn("松美消费机 iorg-smface receive equipment upload  person face image user id ============================ :" + accountId);
+            String base64Str = data.getString("photo");
+            String imgName = ServerUtils.getCustomerUuid() + ".jpeg";
+            String imgFilePath = GlobalConstant.IMAGE_PROFILE + imgName;
+            logger.warn("松美消费机 iorg-smface receive equipment upload  person face image, imgFilePath ============================ :" + imgFilePath);
+            boolean b = ServerUtils.GenerateImage(base64Str, imgFilePath);
+            if (!b) throw new Exception("保存图片失败！");
+            String url = "/" + imgName;
+            JSONObject result = new JSONObject();
+            Long time = ServerUtils.getTimestampSeconds();
+            String noncestr = ServerUtils.getRandomString(32);
+            String baseStr = time + noncestr + GlobalConstant.CARD_PWD;
+            String sign = ServerUtils.computeMd5Sign(baseStr);
+
+            logger.warn("松美消费机 iorg-smface update user face url =============================: " + GlobalConstant.API_HOST + url);
+
+            result.put("api", "takephoto");
+            result.put("time", time.toString());
+            result.put("noncestr", noncestr);
+            result.put("interval", GlobalConstant.interval);
+            result.put("sign", sign);
+            result.put("result_code", "0");
+            result.put("result_msg", "OK");
+
+            logger.warn("松美消费机 iorg-smface receive equipment upload  person face image success, result  ============================ :" + JSON.toJSONString(result));
+            return result;
+        } catch (Exception e) {
+            logger.warn("松美消费机 iorg-smface receive equipment upload  person face image failed ============================");
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+----
+
+### api value
+
+api = "takephoto"
+
+## 修改心跳间隔时间
+
+在服务端应答设备回传的参数可以修改心跳时间间隔，字段 interval
+
+----
+jsonObject.put("interval", 60000);
+----
+
+
+## 权限认证
+
+注意：如果采用spring security 或者 Oauth2, 一定要将 /request/takephoto 进行权限放行，不然设备无法调取接口

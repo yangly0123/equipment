@@ -1,0 +1,30 @@
+{
+  "api": "posonline",
+  "build_time": "2021-01-28 14-09-32",
+  "consume_finish_voice_type": 1,
+  "customer": "abc",
+  "dev_id": "001",
+  "fireware": "KQ208-SV3.5 (20200818)",
+  "ip": "192.168.3.61",
+  "mac": "00e0ec369220",
+  "model": "5",
+  "noncestr": "0015d2881975431885ca5907a2597a41",
+  "params": {
+    "amount": "500",
+    "consume_mode": "1",
+    "dev_mode": "0",
+    "like_id": "",
+    "pay_code": "2",
+    "pay_mode": "0",
+    "psd_state": 0,
+    "sign": "db7ac93dcf23c104122202b7e1e58efa",
+    "sign_time": "1631761472844",
+    "trade_id": "202109161104320000000146598"
+  },
+  "serialno": "SCOPAZTJ2H",
+  "sign": "21a6b9a74d1bd5976a7a14b55ad32d0f",
+  "time": "1631761472849",
+  "transaction_id": "100",
+  "version": "V1.1.0",
+  "wallet_consume_mode": "0"
+}

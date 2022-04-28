@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- status为不记录log4j本身的日志 -->
+<!-- status="off",log4j2把自身事件记录到控制台的配置，off表示不记录，其余的记录有trace，debug，info，warn，error，fatal -->
+<!-- monitorInterval表示检测更改配置的时间,单位是秒,最小间隔为5秒,0或负数表示不检测 -->
+<configuration status="debug" monitorInterval="10">
+    <properties>
+        <property name="LOG_HOME">logs</property>
+        <property name="FILE_NAME">smface</property>
+        <property name="FORMAT">%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} %L - %msg%n</property>
+    </properties>
+    <!--<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+        <errorHandler class="org.jboss.logging.util.OnlyOnceErrorHandler"/>
+        <param name="Target" value="System.out"/>
+        <param name="Threshold" value="DEBUG"/>
+
+        <layout class="org.apache.log4j.PatternLayout">
+            &lt;!&ndash; The default pattern: Date Priority [Category] Message\n &ndash;&gt;
+            <param name="ConversionPattern" value="%d{ABSOLUTE} %-5p [%c{1}] %m%n"/>
+        </layout>
+
+    </appender>-->
+    <appenders>
+        <!--这个输出控制台的配置 信息到System.out-->
+        <Console name="console" target="SYSTEM_OUT">
+            <!--只接受程序中DEBUG级别的日志进行处理-->
+            <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
+            <!-- 单词解释： Match：匹配 DENY：拒绝 Mismatch：不匹配 ACCEPT：接受 -->
+            <!--<ThresholdFilter level="DEBUG" onMatch="ACCEPT" onMismatch="DENY"/>-->
+            <!-- DENY，日志将立即被抛弃不再经过其他过滤器； NEUTRAL，有序列表里的下个过滤器过接着处理日志； ACCEPT，日志会被立即处理，不再经过剩余过滤器。 -->
+            <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度,%msg：日志消息，%n是换行符-->
+            <!--  %d{yyyy-MM-dd HH:mm:ss, SSS} : 日志生产时间  %p : 日志输出格式 %c : logger的名称   %m : 日志内容，即 logger.info("message")  %C : Java类名  %L : 日志输出所在行数  -->
+            <!-- %M : 日志输出所在方法名  hostName : 本地机器名  hostAddress : 本地ip地址 -->
+            <!--<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>-->
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} %L - %msg%n"/>
+            <!--<pattern>%-d{yyyy-MM-dd HH:mm:ss} [%c]-[%p] - %m%n</pattern>-->
+        </Console>
+        <!--文件会打印出所有信息，这个log每次运行程序会自动清空，由append属性决定，这个也挺有用的，适合临时测试用-->
+      <!--  <File name="log" fileName="log/test.log" append="false">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %class{36} %L %M - %msg%xEx%n"/>
+        </File>-->
+        <!--这个会打印出所有的信息，每次大小超过size，则这size大小的日志会自动存入按年份-月份建立的文件夹下面并进行压缩，作为存档-->
+        <RollingRandomAccessFile name="fileLog" fileName="${LOG_HOME}/${FILE_NAME}.log"
+                                 filePattern="${LOG_HOME}/${FILE_NAME}_%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %level [%thread][%file:%line] - %msg%n"/>
+            <!--filePattern="${LOG_PATH}/$${date:yyyy-MM}/${LOG_FILE}-%d{yyyy-MM-dd HH-mm}-%i.log"-->
+            <!--<pattern>%-d{yyyy-MM-dd HH:mm:ss} [%c]-[%p] - %m%n</pattern>-->
+            <!-- 每天滚存日志 -->
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+                <SizeBasedTriggeringPolicy size="1 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+            <!-- <DefaultRolloverStrategy>
+                 <Delete basePath="../log" maxDepth="1">
+                     <IfFileName glob="vip_vipidentity*.log" />
+                     &lt;!&ndash; 日志保存时间 &ndash;&gt;
+                     <IfLastModified age="5d" />
+                 </Delete>
+             </DefaultRolloverStrategy>-->
+
+        </RollingRandomAccessFile>
+        <!--druid的日志记录追加器-->
+        <RollingFile name="druidSqlRollingFile" fileName="./logs/druid-sql.log"
+                     filePattern="logs/$${date:yyyy-MM}/api-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %-5level %L %M - %msg%xEx%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="500 MB"/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+        </RollingFile>
+    </appenders>
+    <!--然后定义logger，只有定义了logger并引入的appender，appender才会生效-->
+    <loggers>
+        <!-- -->
+        <root level="warn">
+            <appender-ref ref="console"/>
+            <!--<appender-ref ref="fileLog" />-->
+            <!--<appender-ref ref="druidSqlRollingFile" />-->
+        </root>
+<!--        &lt;!&ndash; mybatis loggers &ndash;&gt;-->
+<!--        <logger name="com.hangmu.iorg" level="debug">-->
+<!--            <appender-ref ref="druidSqlRollingFile"/>-->
+<!--        </logger>-->
+
+<!--        <logger name="com.alibaba.dubbo" level="debug" additivity="false">-->
+<!--            <appender-ref ref="console" />-->
+<!--        </logger>-->
+        <!--记录druid-sql的记录-->
+<!--        <logger name="druid.sql.Statement" level="off" additivity="false">-->
+<!--            <appender-ref ref="druidSqlRollingFile"/>-->
+<!--        </logger>-->
+<!--        <logger name="druid.sql.ResultSet" level="off" additivity="false">-->
+<!--            <appender-ref ref="druidSqlRollingFile"/>-->
+<!--        </logger>-->
+        <!--<logger name="druid.sql.Statement" level="debug" additivity="false">
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="druid.sql.ResultSet" level="debug" additivity="false">
+            <appender-ref ref="console"/>
+        </logger>-->
+        <!--过滤掉spring和hibernate的一些无用的debug信息-->
+        <logger name="org.apache.dubbo.config" level="warn" additivity="false">
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="org.apache.dubbo.registry" level="warn" additivity="false">
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="org.apache.dubbo.remoting" level="warn" additivity="false">
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="org.apache.dubbo.metadata" level="warn" additivity="false">
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="org.apache.dubbo.qos" level="warn" additivity="false">
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="org.apache.curator" level="warn" additivity="false">
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="org.springframework" level="warn" additivity="false">
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="org.apache.zookeeper" level="warn" additivity="false">
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="org.hibernate" level="warn" additivity="false">
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="org.hibernate.validator.internal.util.Version" level="warn">
+            <appender-ref ref="console"/>
+        </logger>
+
+        <!--log4j2 自带过滤日志-->
+        <Logger name="org.apache.catalina.startup.DigesterFactory" level="error"/>
+        <Logger name="org.apache.catalina.util.LifecycleBase" level="error"/>
+        <Logger name="org.apache.coyote.http11.Http11NioProtocol" level="warn"/>
+        <logger name="org.apache.sshd.common.util.SecurityUtils" level="warn"/>
+        <Logger name="org.apache.tomcat.util.net.NioSelectorPool" level="warn"/>
+        <logger name="org.springframework.boot.actuate.autoconfigure.CrshAutoConfiguration" level="warn"/>
+        <logger name="org.springframework.boot.actuate.endpoint.jmx" level="warn"/>
+        <logger name="org.thymeleaf" level="warn"/>
+    </loggers>
+</configuration>

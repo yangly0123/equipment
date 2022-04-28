@@ -1,0 +1,102 @@
+= 人脸图片访问设计文档
+v1.0, 2022-04-14
+:doctype: article
+:encoding: utf-8
+:lang: zh
+:toc:
+:numbered:
+:AUTHOR: wangmaojun
+
+
+## 人脸图片访问设计
+
+### 人脸图片访问设计思想
+
+1. 后台在员工管理处添加用户人脸照片
+
+2. 后台提供接口 /api/upload/image， 进行图片上传，将人脸照片存在服务所在节点的磁盘上
+
+3. 设备访问人脸图片时，请求接口地址 /image?name=
+
+
+[TIP]
+====
+不建议此方式进行图片存储及图片访问
+====
+
+## 程序实现流程
+
+### /api/upload/image
+
+----
+ @GeneralJWT
+    @PostMapping("image")
+    public Result image(@RequestPart("photo") MultipartFile photo) throws IOException {
+        try {
+            log.info("上传的信息：file={}", photo.getSize());
+            String fileName = "";
+            String imgName = "";
+            if(!photo.isEmpty()){
+                //保存到文件服务器，OSS服务器
+//            String originalFilename = file.getOriginalFilename();
+                imgName = ServerUtils.getCustomerUuid() + ".jpg";
+                fileName = profile + imgName;
+                String tmpFileName = "/tmp/" + imgName;
+                if (ServerUtils.isWindows()) tmpFileName = "C:\\WINDOWS\\Temp\\" + imgName;
+                File tmpImg = new File(tmpFileName);
+                File image = new File(fileName);
+                photo.transferTo(tmpImg);
+                iImageService.resize(tmpImg, image);
+            }
+            HashMap<String, String> res = new HashMap<>();
+            res.put("name", imgName);
+            res.put("url", apiHost + "/image?name=" + imgName);
+            return Result.OK(res);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("上传图片失败");
+        }
+    }
+----
+
+### /image?name=
+
+----
+    @GetMapping("")
+    @ResponseBody
+    @IgnoreSecurity
+    public void getImage(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            @RequestParam(value="name", defaultValue = "") String name
+    ) {
+        try {
+            String url= profile + name;
+            File file = new File(url);
+            String filename = file.getName();
+            log.debug("filename = " + filename);
+            String[] split = filename.split("\\.");
+            String ext = split[1];
+            InputStream fis = new BufferedInputStream(new FileInputStream(file));
+            byte[] buffer = new byte[fis.available()];
+            fis.read(buffer);
+            fis.close();
+            response.reset();
+            // 设置response的Header
+            response.addHeader("Content-Length", "" + file.length());
+            System.out.println("image/split[1] = " + "image/" + split[1]);
+            response.setContentType("image/" + ext);
+
+            OutputStream toClient = new BufferedOutputStream(response.getOutputStream());
+            toClient.write(buffer);
+            toClient.flush();
+            toClient.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+----
+
+## 权限认证
+
+注意：如果采用spring security 或者 Oauth2, 一定要将 /image 进行权限放行，不然设备无法调取接口

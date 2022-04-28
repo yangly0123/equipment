@@ -1,0 +1,82 @@
+= 消费机时段模式规则同步到设备设计文档
+v1.0, 2022-04-14
+:doctype: article
+:encoding: utf-8
+:lang: zh
+:toc:
+:numbered:
+:AUTHOR: wangmaojun
+
+
+## 时段模式规则同步到设备设计
+
+### 时段模式规则同步到设备设计思路
+
+1. 在组织管理端设置消费机消费时段
+
+2. 消费机运行期间，如果组织管理端设置或修改消费机消费时段，通过 设备调取smface-server /request/heartbeat 回传设备设置信息
+
+
+
+## 程序实现流程
+
+### /request/heartbeat
+
+----
+ /**
+     * @param data
+     * @return
+     */
+    @RequestMapping("heartbeat")
+    public JSONObject heartbeat(@RequestBody JSONObject data) {
+        logger.warn("松美消费机 start heartbeat ======================================");
+        try {
+            logger.warn("heartbeat received request data ===========================：" + JSON.toJSONString(data));
+            String devId = data.getString("dev_id");
+            logger.warn("heartbeat dev_id ===========================: " + devId);
+            String serialno = data.getString("serialno");
+            logger.warn(" heartbeat serialno ===========================: " + serialno);
+            String transactionId = data.getString("transaction_id");
+            logger.info("query device, the device id : ===============================" + devId);
+            DeviceEntity deviceEntity = deviceService.queryByDeviceId(devId, serialno);
+            if (deviceEntity != null) {
+                deviceEntity.setLastHeartbeatTime(LocalDateTime.now());
+                //1. update heart time
+                logger.warn("heartbeat update heart time, the time: ====================================" + new Date());
+                deviceService.update(deviceEntity);
+            }
+            //4. send device settings
+            if (GlobalConstant.DEVICE_SETTINGS_RELOAD.intValue() == 0) {
+                JSONObject settings = deviceSettingService.reloadSettings(deviceEntity, transactionId);
+                return settings;
+            }
+            // 5. return heartbeat data
+            JSONObject back = heartBeatService.handleHeartbeat(data);
+            back.put("interval", GlobalConstant.interval);
+            logger.warn("松美消费机 heartbeat return result ================================== :" + JSON.toJSONString(back));
+            return back;
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("松美消费机 heartbeat  failed, cause ==================================:  " + e.getMessage());
+            return null;
+        }
+    }
+----
+
+### api value
+
+api = "parameters"
+
+## 修改心跳间隔时间
+
+在服务端应答设备回传的参数可以修改心跳时间间隔，字段 interval
+
+----
+jsonObject.put("interval", 60000);
+----
+
+
+## 权限认证
+
+注意：如果采用spring security 或者 Oauth2, 一定要将 /request/heartbeat 进行权限放行，不然设备无法调取接口
+

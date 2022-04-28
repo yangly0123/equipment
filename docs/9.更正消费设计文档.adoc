@@ -1,0 +1,89 @@
+= 更正上一次消费金额设计文档
+v1.0, 2022-04-14
+:doctype: article
+:encoding: utf-8
+:lang: zh
+:toc:
+:numbered:
+:AUTHOR: wangmaojun
+
+
+## 更正上一次消费金额设计
+
+### 更正上一次消费金额设计思路
+
+1. 用户在消费机上消费了 xxx金额，其中消费的 balance 为 yyy, 消费的 allowance 为 zzz, 新增加的point 为 www
+
+2. 商家老板点击消费机上更正按钮， 输入密码
+
+3. 消费者进行刷脸确认
+
+4. 设备调取 request/real infoquery 查询接口，查询上一条消费记录的详情，显示在消费机屏幕上
+
+5. 消费者在屏幕上点击确认
+
+6. 设备调取接口 request/real 走 case "correctonline" 进行更正
+
+
+## 程序实现流程
+
+
+### request/real
+
+====
+ @PostMapping("real")
+    public JSONObject real(@RequestBody JSONObject data) {
+        String api = data.getString("api");
+        String time = data.getString("time");
+        String noncestr = data.getString("noncestr");
+        String sign = data.getString("sign");
+        try {
+            switch (api) {
+                // include balance、allowance money
+                case "infoquery":
+                    logger.warn("松美消费机 iorg-smface real infoquery start =================================");
+                    return infoQueryService.infoQuery(data);
+                //Correct the last consumption record
+                case "correctonline":
+                    logger.warn("松美消费机 iorg-smface real correctonline start =================================");
+                    return correctonlineService.correctonline(data);
+                default:
+                logger.error("松美消费机 iorg-smface real failed =================================");
+                throw new IllegalStateException("松美消费机 iorg-smface real failed, api ======================================: " + api);
+            }
+        } catch (Exception e) {
+            logger.error("real: " + e.getMessage());
+            JSONObject res = new JSONObject();
+            res.put("api", api);
+            res.put("result_code", "1");
+            res.put("result_msg", "支付失败");
+            return res;
+        }
+    }
+====
+
+### api value
+
+* case "infoquery"
+
+api = "infoquery"
+
+* case "correctonline"
+
+api = "correctonline"
+
+
+## 修改心跳间隔时间
+
+在服务端应答设备回传的参数可以修改心跳时间间隔，字段 interval
+
+----
+jsonObject.put("interval", 60000);
+----
+
+
+## 权限认证
+
+注意：如果采用spring security 或者 Oauth2, 一定要将 /request/real 进行权限放行，不然设备无法调取接口
+
+

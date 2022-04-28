@@ -1,0 +1,102 @@
+= 人脸二维码取餐设计文档
+v1.0, 2022-04-14
+:doctype: article
+:encoding: utf-8
+:lang: zh
+:toc:
+:numbered:
+:AUTHOR: wangmaojun
+
+
+## 人脸二维码取餐设计
+
+### 人脸取餐设计思路
+
+* 用户在H5页面订餐，得到一个订餐详情
+
+* 本地模拟生成一个H5订餐页面链接
+
+http://localhost:9529/debug?token=eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiI1MTYiLCJzdWIiOiIzNC0xNTAxMDA1MzY2OCIsImFkbWluSWQiOjUxNiwiZ3VhcmQiOiJpY2JjIiwiaXNzIjoidXNlciIsImlhdCI6MTY1MTA0MDg2OCwiZXhwIjoxNjUxMDg0MDY4fQ.DpVz797qzfH86RCbVSTn8T_6hV0-wjzQhmxLQ8_Mq4Q
+
+* 订餐详情中有本次订单的二维码，二维码里面包含订单相关信息
+
+* 消费机需要调成取餐机模式，注意消费机调整模式后用户数据会被清理，需要重新下发人员信息
+
+* 消费者扫二维码或者刷脸后，设备调取smface-server 接口 request/real，走 case "takemeal" 逻辑, 接口应答信息包含
+订单中菜品的信息、数量的信息
+
+* 消费者点击确认后，设备调取 smface-server 接口 request/real，走case "takemealok" 逻辑, 处理成功消费后的一些数据标定，
+如更新本次订单详情的状态，表明已取餐等
+
+[TIP]
+====
+消费机需要调成取餐机模式，需要重新下发人员信息
+====
+
+
+## 程序实现流程
+
+
+### /request/real
+
+====
+ @PostMapping("real")
+    public JSONObject real(@RequestBody JSONObject data) {
+        String api = data.getString("api");
+        String time = data.getString("time");
+        String noncestr = data.getString("noncestr");
+        String sign = data.getString("sign");
+        try {
+            switch (api) {
+                // 取餐时(客户端h5需先订餐)查询订单
+                case "takemeal":
+                    logger.warn("松美消费机 iorg-smface real takemeal start =================================");
+                    return requestService.handleTakemeal(data);
+                // 取餐确认（客户端H5需先订餐）
+                case "takemealok":
+                    logger.warn("松美消费机 iorg-smface real takemealok start =================================");
+                    return requestService.handleTakemealok(data);
+                default:
+                logger.error("松美消费机 iorg-smface real failed =================================");
+                throw new IllegalStateException("松美消费机 iorg-smface real failed, api ======================================: " + api);
+            }
+        } catch (Exception e) {
+            logger.error("real: " + e.getMessage());
+            JSONObject res = new JSONObject();
+            res.put("api", api);
+            res.put("result_code", "1");
+            res.put("result_msg", "支付失败");
+            return res;
+        }
+    }
+====
+
+### 应答设备参数
+
+* request/real case takemeal
+
+image::images/取餐-01.png[]
+
+
+### api value
+
+* case "takemeal"
+
+api = "takemeal"
+
+* case "takemealok"
+
+api = "takemealok"
+
+## 修改心跳间隔时间
+
+在服务端应答设备回传的参数可以修改心跳时间间隔，字段 interval
+
+----
+jsonObject.put("interval", 60000);
+----
+
+
+## 权限认证
+
+注意：如果采用spring security 或者 Oauth2, 一定要将 /request/real 进行权限放行，不然设备无法调取接口
